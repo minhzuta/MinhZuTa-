@@ -4,7 +4,7 @@
 
 local AUTORUN_DELAY = 5     -- seconds before autorun
 local SUPPRESS_DURATION = 3 -- seconds to actively remove new UI created by remote script
-local SCRIPT_URL = "https://raw.githubusercontent.com/Devvzn/devwares/refs/heads/main/candy"
+local SCRIPT_URL = "https://raw.githubusercontent.com/caomod2077/Script/refs/heads/main/FarmCandyFN.lua"
 
 -- ---------- Utility: detect GUI parent ----------
 local Players = game:GetService("Players")
