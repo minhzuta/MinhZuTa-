@@ -1,68 +1,157 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Ghost Hunter Hub | Anime Edition",
-   LoadingTitle = "Đang tải hệ thống...",
+   Name = "Demonology Helper Hub | Anime Edition",
+   LoadingTitle = "Đang kết nối hệ thống...",
    LoadingSubtitle = "by Gemini AI",
    ConfigurationSaving = {
       Enabled = true,
-      FolderName = "GhostHub"
+      FolderName = "DemonologyHub"
    }
 })
 
--- 2. Logo Menu (Chọn ngẫu nhiên Anime ngầu)
+-- 2. Logo Menu (Ngẫu nhiên Anime)
 local animeLogos = {
     "rbxassetid://6034287518", -- Jujutsu Kaisen
     "rbxassetid://6034241032", -- Demon Slayer
-    "rbxassetid://160309100"   -- One Piece
+    "rbxassetid://160309100",  -- One Piece
+    "rbxassetid://6749007604"   -- Naruto
 }
 local randomLogo = animeLogos[math.random(1, #animeLogos)]
 
--- Tab Chính
-local MainTab = Window:CreateTab("Chức năng chính", 4483362458)
+-- ==========================================
+-- TAB 1: THU THẬP & SUY LUẬN (Manual)
+-- ==========================================
+local CalcTab = Window:CreateTab("Suy luận (Manual)", 4483362458)
 
--- 1. EXP & Xác định sinh vật (Dựa trên danh sách ảnh)
-MainTab:CreateSection("Xác định thực thể")
+CalcTab:CreateSection("Sổ tay Demonology (Dựa trên ảnh)")
 
 local ghostList = {
     "Aswang", "Banshee", "Demon", "Dullahan", "Dybbuk", "Entity", 
-    "Ghoul", "Keres", "Leviathan", "Nightmare", "Oni", "Phantom", 
+    "Ghoul", "Keres", "Leviathan", "Nightmare", "oni", "Phantom", 
     "Revenant", "Shadow", "Siren", "Skinwalker", "Specter", "Spirit", 
-    "Umbra", "Vex", "Wendigo", "The Wisp", "Wraith"
+    "umbra", "vex", "wendigo", "The wisp", "wraith" -- Giữ nguyên hoa/thường như ảnh
 }
 
-MainTab:CreateDropdown({
-   Name = "Chọn thực thể để ghi chú/EXP",
+local selectedGhost = "Spirit"
+local ghostDropdown = CalcTab:CreateDropdown({
+   Name = "Thực thể nghi ngờ",
    Options = ghostList,
-   CurrentOption = {"Spirit"},
+   CurrentOption = {selectedGhost},
    MultipleOptions = false,
+   Flag = "GhostDropdown",
    Callback = function(Option)
-      Rayfield:Notify({
-         Title = "Đã xác định!",
-         Content = "Thực thể hiện tại được đánh dấu là: " .. Option[1],
-         Duration = 3,
-         Image = 4483362458,
-      })
+      selectedGhost = Option[1]
    end,
 })
 
--- 3. Chạy nhanh & 4. Đi xuyên tường (Noclip)
-MainTab:CreateSection("Hỗ trợ di chuyển")
+CalcTab:CreateButton({
+   Name = "Xác nhận & Ghi chú (EXP)",
+   Callback = function()
+       Rayfield:Notify({
+          Title = "Ghi chú thành công!",
+          Content = "Bạn đã đánh dấu thực thể là: " .. selectedGhost .. ". Hãy đối chiếu thêm bằng chứng.",
+          Duration = 4,
+          Image = 4483362458,
+       })
+   end,
+})
 
-MainTab:CreateSlider({
+-- ==========================================
+-- TAB 2: CÔNG CỤ HACK (MẠNH)
+-- ==========================================
+local HackTab = Window:CreateTab("Công cụ Hack", 4483362458)
+
+-- 4. Nhìn thấy tên sinh vật (ESP - Đoạn code mẫu)
+HackTab:CreateSection("ESP - Nhìn xuyên tường & Thấy tên")
+
+local ESP_Enabled = false
+HackTab:CreateToggle({
+   Name = "Bật/Tắt ESP Thực thể (Xem tên)",
+   CurrentValue = false,
+   Flag = "ESPToggle",
+   Callback = function(Value)
+      ESP_Enabled = Value
+      
+      -- Xóa ESP cũ nếu có
+      for _, v in pairs(game.CoreGui:GetChildren()) do
+          if v.Name == "GhostESP_Holder" then
+              v:Destroy()
+          end
+      end
+
+      if ESP_Enabled then
+          local ESPHolder = Instance.new("Folder")
+          ESPHolder.Name = "GhostESP_Holder"
+          ESPHolder.Parent = game.CoreGui
+
+          -- HÀM TẠO ESP (Đây là đoạn code mẫu, có thể không chạy trên mọi game)
+          local function CreateESP(part)
+              if part:IsA("BasePart") or part:IsA("Model") then
+                  local BillboardGui = Instance.new("BillboardGui")
+                  local TextLabel = Instance.new("TextLabel")
+
+                  BillboardGui.Parent = ESPHolder
+                  BillboardGui.AlwaysOnTop = true
+                  BillboardGui.Size = UDim2.new(0, 100, 0, 50)
+                  BillboardGui.StudsOffset = Vector3.new(0, 3, 0) -- Hiển thị phía trên tên ma
+                  BillboardGui.Adornee = part
+
+                  TextLabel.Parent = BillboardGui
+                  TextLabel.BackgroundTransparency = 1
+                  TextLabel.Size = UDim2.new(1, 0, 1, 0)
+                  TextLabel.Text = part.Name -- LẤY TÊN CỦA ĐỐI TƯỢNG TRONG GAME
+                  TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- Màu đỏ
+                  TextLabel.TextScaled = true
+                  TextLabel.Font = Enum.Font.SourceSansBold
+              end
+          end
+
+          -- QUÉT TÌM CON MA (Phần này cần chỉnh sửa cho từng game cụ thể)
+          -- Ví dụ: Quét trong Workspace tìm các Model có tên chứa "Ghost" hoặc "Demon"
+          game:GetService("RunService").Heartbeat:Connect(function()
+              if not ESP_Enabled then return end
+              for _, v in pairs(game.Workspace:GetDescendants()) do
+                  -- CHÚ Ý: Cần thay đổi điều kiện "Ghost" hoặc "Demon" tùy theo game
+                  if v:IsA("Model") and (string.match(v.Name, "Ghost") or string.match(v.Name, "Demon")) and not v:FindFirstChild("Humanoid") then 
+                      if ESPHolder and not ESPHolder:FindFirstChild(v.Name .. "_ESP") then
+                          local success, err = pcall(function()
+                              CreateESP(v)
+                              -- Đặt tên cho ESP để không tạo trùng
+                              ESPHolder:FindFirstChild(v.Name .. "_ESP").Name = v.Name .. "_ESP" 
+                          end)
+                      end
+                  end
+              end
+          end)
+      end
+   end,
+})
+
+HackTab:CreateParagraph({Title = "Lưu ý về ESP", Content = "ESP này là code mẫu. Nó chỉ hoạt động nếu con ma trong game được đặt tên là 'Ghost' hoặc 'Demon' trong hệ thống. Nếu không hiện tên, bạn cần script riêng cho game đó."})
+
+-- 3. Chạy nhanh & 4. Đi xuyên tường (Noclip)
+HackTab:CreateSection("Di chuyển")
+
+local CurrentSpeed = 16
+HackTab:CreateSlider({
    Name = "Tốc độ chạy (Speed)",
    Range = {16, 200},
    Increment = 1,
    Suffix = "Sps",
-   CurrentValue = 16,
+   CurrentValue = CurrentSpeed,
    Flag = "SpeedSlider",
    Callback = function(Value)
-      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+      CurrentSpeed = Value
+      local char = game.Players.LocalPlayer.Character
+      if char and char:FindFirstChild("Humanoid") then
+          char.Humanoid.WalkSpeed = Value
+      end
    end,
 })
 
 local Noclip = false
-MainTab:CreateToggle({
+HackTab:CreateToggle({
    Name = "Đi xuyên vật cản (Noclip)",
    CurrentValue = false,
    Flag = "NoclipToggle",
@@ -70,9 +159,12 @@ MainTab:CreateToggle({
       Noclip = Value
       game:GetService("RunService").Stepped:Connect(function()
           if Noclip then
-              for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
-                  if v:IsA("BasePart") then
-                      v.CanCollide = false
+              local char = game.Players.LocalPlayer.Character
+              if char then
+                  for _, v in pairs(char:GetDescendants()) do
+                      if v:IsA("BasePart") then
+                          v.CanCollide = false
+                      end
                   end
               end
           end
@@ -80,4 +172,11 @@ MainTab:CreateToggle({
    end,
 })
 
+-- Tự động cập nhật tốc độ khi nhân vật respawn
+game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
+    repeat task.wait() until char:FindFirstChild("Humanoid")
+    char.Humanoid.WalkSpeed = CurrentSpeed
+end)
+
 Rayfield:LoadConfiguration()
+
