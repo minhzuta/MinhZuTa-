@@ -1,68 +1,36 @@
--- [[ GHOST ESP CHUYÊN DỤNG CHO EXECUTOR ]] --
--- Danh sách 23 loại ma từ hình ảnh của bạn
+-- [[ GHOST ESP - MINHZUTA ]] --
+local GhostList = {"aswang", "banshee", "demon", "dullahan", "dybbuk", "entity", "ghoul", "keres", "leviathan", "nightmare", "oni", "phantom", "revenant", "shadow", "siren", "skinwalker", "specter", "spirit", "umbra", "vex", "wendigo", "the wisp", "wraith"}
 
-local GhostNames = {
-    "aswang", "banshee", "demon", "dullahan", "dybbuk", "entity", 
-    "ghoul", "keres", "leviathan", "nightmare", "oni", "phantom", 
-    "revenant", "shadow", "siren", "skinwalker", "specter", "spirit", 
-    "umbra", "vex", "wendigo", "the wisp", "wraith"
-}
+local function CreateESP(m)
+    if m:FindFirstChild("Zuta_ESP") then return end
+    local h = m:FindFirstChild("HumanoidRootPart") or m:FindFirstChild("Head")
+    if not h then return end
 
--- Hàm tạo bảng tên và EXP
-local function CreateESP(model)
-    if model:FindFirstChild("ESP_GHOST") then return end
-    
-    local part = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Head")
-    if not part then return end
+    local b = Instance.new("BillboardGui", m)
+    b.Name = "Zuta_ESP"
+    b.AlwaysOnTop, b.Size, b.StudsOffset = true, UDim2.new(0,200,0,50), Vector3.new(0,3,0)
 
-    local bgui = Instance.new("BillboardGui", model)
-    bgui.Name = "ESP_GHOST"
-    bgui.AlwaysOnTop = true
-    bgui.Size = UDim2.new(0, 200, 0, 50)
-    bgui.StudsOffset = Vector3.new(0, 3, 0)
+    local t = Instance.new("TextLabel", b)
+    t.Size, t.BackgroundTransparency, t.TextScaled = UDim2.new(1,0,1,0), 1, true
+    t.TextColor3, t.Font = Color3.fromRGB(255, 0, 0), Enum.Font.Code
 
-    local tl = Instance.new("TextLabel", bgui)
-    tl.BackgroundTransparency = 1
-    tl.Size = UDim2.new(1, 0, 1, 0)
-    tl.Font = Enum.Font.Code
-    tl.TextStrokeTransparency = 0
-    tl.TextColor3 = Color3.fromRGB(255, 255, 255) -- Chữ trắng
-    tl.TextScaled = true
-
-    -- Vòng lặp cập nhật EXP và Tên
-    spawn(function()
-        while model.Parent and bgui.Parent do
-            -- Tự động tìm giá trị EXP (Thường nằm trong Model hoặc Humanoid)
-            local expValue = model:FindFirstChild("EXP") or model:FindFirstChild("Experience") or model:FindFirstChild("Level")
-            local currentExp = expValue and tostring(expValue.Value) or "N/A"
-            
-            tl.Text = model.Name .. "\n[EXP: " .. currentExp .. "]"
-            wait(1)
+    task.spawn(function()
+        while m.Parent and b.Parent do
+            local exp = m:FindFirstChild("EXP") or m:FindFirstChild("Experience") or (m:FindFirstChild("Stats") and m.Stats:FindFirstChild("EXP"))
+            t.Text = string.upper(m.Name) .. "\nEXP: " .. (exp and tostring(exp.Value) or "0")
+            task.wait(1)
         end
     end)
 end
 
--- Hàm kiểm tra xem Model có phải là quái trong danh sách không
-local function CheckGhost(obj)
-    if obj:IsA("Model") then
-        for _, name in pairs(GhostNames) do
-            if string.find(string.lower(obj.Name), name) then
-                CreateESP(obj)
-                break
-            end
+local function check(o)
+    if o:IsA("Model") then
+        for _, g in pairs(GhostList) do
+            if string.find(string.lower(o.Name), g) then CreateESP(o) break end
         end
     end
 end
 
--- Thực thi quét toàn bản đồ
-for _, v in pairs(workspace:GetDescendants()) do
-    CheckGhost(v)
-end
-
--- Tự động hiện khi quái mới xuất hiện
-workspace.DescendantAdded:Connect(function(v)
-    wait(0.5)
-    CheckGhost(v)
-end)
-
-print(">>> Đã kích hoạt ESP cho 23 loại Ma!")
+for _, v in pairs(workspace:GetDescendants()) do check(v) end
+workspace.DescendantAdded:Connect(check)
+print("MinhZuTa Ghost ESP Loaded!")
