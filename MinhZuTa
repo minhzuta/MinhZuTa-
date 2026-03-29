@@ -1,95 +1,95 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- 1. LOGO ANIME NGẪU NHIÊN
-local animeLogos = {"rbxassetid://6034287518", "rbxassetid://6034241032", "rbxassetid://160309100", "rbxassetid://6749007604"}
-local randomLogo = animeLogos[math.random(1, #animeLogos)]
-
 local Window = Rayfield:CreateWindow({
-   Name = "DEMONOLOGY FINAL HUB | PRO",
-   LoadingTitle = "Đang tải hệ thống...",
+   Name = "DEMONOLOGY GOD MODE | v5.0",
+   LoadingTitle = "Đang thâm nhập dữ liệu Map...",
    LoadingSubtitle = "by Gemini AI",
    ConfigurationSaving = { Enabled = false }
 })
 
--- DANH SÁCH 23 LOẠI MA
+-- DANH SÁCH 23 LOẠI MA ĐỂ ĐỐI CHIẾU
 local GhostDB = {"Aswang", "Banshee", "Demon", "Dullahan", "Dybbuk", "Entity", "Ghoul", "Keres", "Leviathan", "Nightmare", "Oni", "Phantom", "Revenant", "Shadow", "Siren", "Skinwalker", "Specter", "Spirit", "Umbra", "Vex", "Wendigo", "The Wisp", "Wraith"}
 
+-- HÀM QUÉT TÌM CON MA CỰC MẠNH (DÙNG CHO CẢ TP VÀ XÁC ĐỊNH)
+local function FindTrueGhost()
+    for _, v in pairs(game.Workspace:GetDescendants()) do
+        -- Tìm bất kỳ Model nào có Humanoid mà không phải là người chơi
+        if v:IsA("Model") and v:FindFirstChildOfClass("Humanoid") and not game.Players:GetPlayerFromCharacter(v) then
+            return v
+        end
+    end
+    -- Nếu không thấy trong Workspace, quét trong các Folder ẩn
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("Model") and table.find(GhostDB, v.Name) then
+            return v
+        end
+    end
+    return nil
+end
+
 -- ==========================================
--- TAB 1: XÁC ĐỊNH SINH VẬT (CÓ NÚT ẤN)
+-- TAB 1: XÁC ĐỊNH SINH VẬT & BẰNG CHỨNG
 -- ==========================================
 local InfoTab = Window:CreateTab("Xác định Ma", 4483362458)
-InfoTab:CreateSection("--- THÔNG TIN ---")
+local GhostLabel = InfoTab:CreateLabel("Ghost: Đang chờ quét...")
+local EvidenceLabel = InfoTab:CreateLabel("Thông số: Chưa tìm thấy")
 
-local GhostLabel = InfoTab:CreateLabel("Ghost: Chưa xác định")
-local TempLabel = InfoTab:CreateLabel("Nhiệt độ: --°C")
-local FingerLabel = InfoTab:CreateLabel("Vân tay: --")
-
--- NÚT ẤN XÁC ĐỊNH (EXP GHOST)
 InfoTab:CreateButton({
-   Name = "ẤN ĐỂ XÁC ĐỊNH GHOST (EXP GHOST)",
+   Name = "NÚT ẤN: QUÉT & XÁC ĐỊNH GHOST",
    Callback = function()
-       local found = false
-       -- Quét tìm dữ liệu thực thể
-       for _, v in pairs(game:GetDescendants()) do
-           if v:IsA("Model") and (table.find(GhostDB, v.Name) or v:GetAttribute("GhostType")) then
-               local name = v:GetAttribute("GhostType") or v.Name
-               local temp = v:GetAttribute("Temperature") or v:GetAttribute("Temp") or "N/A"
-               local prints = v:GetAttribute("Fingerprints") or v:GetAttribute("Handprints") or "N/A"
-               
-               GhostLabel:Set("GHOST: " .. tostring(name):upper())
-               TempLabel:Set("Nhiệt độ: " .. tostring(temp) .. "°C")
-               FingerLabel:Set("Bằng chứng vân tay: " .. tostring(prints))
-               
-               Rayfield:Notify({
-                  Title = "Đã xác định!",
-                  Content = "Thực thể: " .. name .. " | Temp: " .. temp,
-                  Duration = 5,
-                  Image = 4483362458,
-               })
-               found = true
-               break
-           end
-       end
-       if not found then
-           Rayfield:Notify({Title = "Lỗi", Content = "Không tìm thấy dữ liệu ma trong Map!", Duration = 3})
+       local ghost = FindTrueGhost()
+       if ghost then
+           local name = ghost:GetAttribute("GhostType") or ghost.Name
+           local temp = ghost:GetAttribute("Temperature") or ghost:GetAttribute("Temp") or "N/A"
+           local prints = ghost:GetAttribute("Fingerprints") or "N/A"
+           
+           GhostLabel:Set("GHOST: " .. tostring(name):upper())
+           EvidenceLabel:Set("Nhiệt độ: " .. temp .. " | Vân tay: " .. prints)
+           
+           Rayfield:Notify({Title = "Đã tìm thấy!", Content = "Thực thể: " .. name, Duration = 5})
+       else
+           Rayfield:Notify({Title = "Lỗi", Content = "Không tìm thấy Ghost! Hãy đợi ma xuất hiện.", Duration = 3})
        end
    end,
 })
 
 -- ==========================================
--- TAB 2: ĐỊNH VỊ VẬT PHẨM (ESP)
+-- TAB 2: ĐỊNH VỊ VẬT PHẨM (ESP FIX)
 -- ==========================================
 local ESPTab = Window:CreateTab("Định vị", 4483362458)
 
-local function CreateTag(part, name, color)
-    if not part:FindFirstChild("DetectorTag") then
-        local b = Instance.new("BillboardGui", part)
-        b.Name = "DetectorTag"; b.AlwaysOnTop = true; b.Size = UDim2.new(0,100,0,40); b.StudsOffset = Vector3.new(0,2,0)
-        local t = Instance.new("TextLabel", b)
-        t.Size = UDim2.new(1,0,1,0); t.BackgroundTransparency = 1; t.Text = name; t.TextColor3 = color; t.TextScaled = true; t.Font = Enum.Font.SourceSansBold
-    end
-end
-
 _G.ESP = false
 ESPTab:CreateToggle({
-   Name = "Bật Định Vị (Ma & Đồ vật)",
+   Name = "Bật/Tắt Định vị (Ma & Vật phẩm)",
    CurrentValue = false,
    Callback = function(v)
        _G.ESP = v
        if not v then
            for _, obj in pairs(game.Workspace:GetDescendants()) do
-               if obj:FindFirstChild("DetectorTag") then obj.DetectorTag:Destroy() end
+               if obj:FindFirstChild("GhostTag") then obj.GhostTag:Destroy() end
            end
        end
+       
        task.spawn(function()
            while _G.ESP do
-               for _, obj in pairs(game.Workspace:GetDescendants()) do
-                   if obj:IsA("Model") and table.find(GhostDB, obj.Name) then
-                       CreateTag(obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart"), "⚠️ " .. obj.Name, Color3.fromRGB(255, 0, 0))
-                   elseif obj:IsA("Tool") or obj:FindFirstChildOfClass("ProximityPrompt") then
-                       local target = obj:IsA("Tool") and obj:FindFirstChild("Handle") or (obj:IsA("BasePart") and obj or (obj.Parent:IsA("BasePart") and obj.Parent))
-                       if target and target:IsA("BasePart") then
-                           CreateTag(target, "📦 " .. obj.Name, Color3.fromRGB(255, 255, 0))
+               -- Quét Ma
+               local g = FindTrueGhost()
+               if g then
+                   local p = g:FindFirstChild("HumanoidRootPart") or g:FindFirstChildWhichIsA("BasePart")
+                   if p and not p:FindFirstChild("GhostTag") then
+                       local b = Instance.new("BillboardGui", p)
+                       b.Name = "GhostTag"; b.AlwaysOnTop = true; b.Size = UDim2.new(0,100,0,40); b.StudsOffset = Vector3.new(0,3,0)
+                       local t = Instance.new("TextLabel", b); t.Size = UDim2.new(1,0,1,0); t.BackgroundTransparency = 1; t.Text = "⚠️ GHOST HERE"; t.TextColor3 = Color3.fromRGB(255,0,0); t.TextScaled = true
+                   end
+               end
+               -- Quét Vật phẩm (Mọi thứ có thể nhặt)
+               for _, item in pairs(game.Workspace:GetDescendants()) do
+                   if item:IsA("Tool") or item:FindFirstChildOfClass("ProximityPrompt") then
+                       local handle = item:IsA("Tool") and item:FindFirstChild("Handle") or (item:IsA("BasePart") and item or item.Parent:FindFirstChildWhichIsA("BasePart"))
+                       if handle and not handle:FindFirstChild("GhostTag") then
+                           local b = Instance.new("BillboardGui", handle)
+                           b.Name = "GhostTag"; b.AlwaysOnTop = true; b.Size = UDim2.new(0,80,0,30); b.StudsOffset = Vector3.new(0,2,0)
+                           local t = Instance.new("TextLabel", b); t.Size = UDim2.new(1,0,1,0); t.BackgroundTransparency = 1; t.Text = item.Name; t.TextColor3 = Color3.fromRGB(255,255,0); t.TextScaled = true
                        end
                    end
                end
@@ -100,61 +100,51 @@ ESPTab:CreateToggle({
 })
 
 -- ==========================================
--- TAB 3: DỊCH CHUYỂN THẤP & THẢ ĐỒ
+-- TAB 3: TP THẤP & XẢ ĐỒ (FIX LỖI)
 -- ==========================================
 local ActionTab = Window:CreateTab("Hành động", 4483362458)
 
 ActionTab:CreateButton({
-   Name = "TP Thấp & Thả toàn bộ đồ quanh Ma",
+   Name = "Dịch chuyển THẤP & Xả đồ quanh Ma",
    Callback = function()
        local lp = game.Players.LocalPlayer
-       local char = lp.Character
-       local ghost = nil
-
-       for _, v in pairs(game.Workspace:GetDescendants()) do
-           if v:IsA("Model") and table.find(GhostDB, v.Name) then
-               ghost = v
-               break
-           end
-       end
-
-       if ghost and char then
+       local ghost = FindTrueGhost()
+       
+       if ghost and lp.Character then
            local ghostPart = ghost:FindFirstChild("HumanoidRootPart") or ghost:FindFirstChildWhichIsA("BasePart")
            if ghostPart then
-               -- 1. TP Thấp sát mặt đất cạnh ma
-               char.HumanoidRootPart.CFrame = ghostPart.CFrame * CFrame.new(0, -3.5, 2)
+               -- Dịch chuyển xuống sàn nhà cạnh ma (Trục Y thấp xuống -3.5)
+               lp.Character.HumanoidRootPart.CFrame = ghostPart.CFrame * CFrame.new(0, -3.5, 3)
                task.wait(0.5)
 
-               -- 2. Tự nhặt và thả đồ
+               -- Xả đồ: Cầm lên rồi vứt
                for _, tool in pairs(lp.Backpack:GetChildren()) do
                    if tool:IsA("Tool") then
-                       char.Humanoid:EquipTool(tool)
+                       lp.Character.Humanoid:EquipTool(tool)
                        task.wait(0.2)
                        tool.Parent = game.Workspace
                    end
                end
-               Rayfield:Notify({Title = "Thành công", Content = "Đã dịch chuyển và xả đồ", Duration = 3})
+               Rayfield:Notify({Title = "Thành công", Content = "Đã hạ cánh và thả đồ!", Duration = 3})
            end
+       else
+           Rayfield:Notify({Title = "Lỗi", Content = "Không tìm thấy mục tiêu!", Duration = 3})
        end
    end,
 })
 
 -- ==========================================
--- TAB 4: DI CHUYỂN
+-- TAB 4: DI CHUYỂN & NOCLIP
 -- ==========================================
 local MoveTab = Window:CreateTab("Di chuyển", 4483362458)
 MoveTab:CreateSlider({
-   Name = "Tốc độ chạy",
-   Range = {16, 250},
-   Increment = 1,
-   CurrentValue = 16,
+   Name = "Tốc độ", Range = {16, 250}, Increment = 1, CurrentValue = 16,
    Callback = function(v) game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v end,
 })
 
 _G.Noclip = false
 MoveTab:CreateToggle({
-   Name = "Noclip (Xuyên tường)",
-   CurrentValue = false,
+   Name = "Đi xuyên vật cản", CurrentValue = false,
    Callback = function(v)
        _G.Noclip = v
        game:GetService("RunService").Stepped:Connect(function()
@@ -166,5 +156,3 @@ MoveTab:CreateToggle({
        end)
    end,
 })
-
-Rayfield:LoadConfiguration()
