@@ -1,36 +1,83 @@
--- [[ GHOST ESP - MINHZUTA ]] --
-local GhostList = {"aswang", "banshee", "demon", "dullahan", "dybbuk", "entity", "ghoul", "keres", "leviathan", "nightmare", "oni", "phantom", "revenant", "shadow", "siren", "skinwalker", "specter", "spirit", "umbra", "vex", "wendigo", "the wisp", "wraith"}
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-local function CreateESP(m)
-    if m:FindFirstChild("Zuta_ESP") then return end
-    local h = m:FindFirstChild("HumanoidRootPart") or m:FindFirstChild("Head")
-    if not h then return end
+local Window = Rayfield:CreateWindow({
+   Name = "Ghost Hunter Hub | Anime Edition",
+   LoadingTitle = "Đang tải hệ thống...",
+   LoadingSubtitle = "by Gemini AI",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "GhostHub"
+   }
+})
 
-    local b = Instance.new("BillboardGui", m)
-    b.Name = "Zuta_ESP"
-    b.AlwaysOnTop, b.Size, b.StudsOffset = true, UDim2.new(0,200,0,50), Vector3.new(0,3,0)
+-- 2. Logo Menu (Chọn ngẫu nhiên Anime ngầu)
+local animeLogos = {
+    "rbxassetid://6034287518", -- Jujutsu Kaisen
+    "rbxassetid://6034241032", -- Demon Slayer
+    "rbxassetid://160309100"   -- One Piece
+}
+local randomLogo = animeLogos[math.random(1, #animeLogos)]
 
-    local t = Instance.new("TextLabel", b)
-    t.Size, t.BackgroundTransparency, t.TextScaled = UDim2.new(1,0,1,0), 1, true
-    t.TextColor3, t.Font = Color3.fromRGB(255, 0, 0), Enum.Font.Code
+-- Tab Chính
+local MainTab = Window:CreateTab("Chức năng chính", 4483362458)
 
-    task.spawn(function()
-        while m.Parent and b.Parent do
-            local exp = m:FindFirstChild("EXP") or m:FindFirstChild("Experience") or (m:FindFirstChild("Stats") and m.Stats:FindFirstChild("EXP"))
-            t.Text = string.upper(m.Name) .. "\nEXP: " .. (exp and tostring(exp.Value) or "0")
-            task.wait(1)
-        end
-    end)
-end
+-- 1. EXP & Xác định sinh vật (Dựa trên danh sách ảnh)
+MainTab:CreateSection("Xác định thực thể")
 
-local function check(o)
-    if o:IsA("Model") then
-        for _, g in pairs(GhostList) do
-            if string.find(string.lower(o.Name), g) then CreateESP(o) break end
-        end
-    end
-end
+local ghostList = {
+    "Aswang", "Banshee", "Demon", "Dullahan", "Dybbuk", "Entity", 
+    "Ghoul", "Keres", "Leviathan", "Nightmare", "Oni", "Phantom", 
+    "Revenant", "Shadow", "Siren", "Skinwalker", "Specter", "Spirit", 
+    "Umbra", "Vex", "Wendigo", "The Wisp", "Wraith"
+}
 
-for _, v in pairs(workspace:GetDescendants()) do check(v) end
-workspace.DescendantAdded:Connect(check)
-print("MinhZuTa Ghost ESP Loaded!")
+MainTab:CreateDropdown({
+   Name = "Chọn thực thể để ghi chú/EXP",
+   Options = ghostList,
+   CurrentOption = {"Spirit"},
+   MultipleOptions = false,
+   Callback = function(Option)
+      Rayfield:Notify({
+         Title = "Đã xác định!",
+         Content = "Thực thể hiện tại được đánh dấu là: " .. Option[1],
+         Duration = 3,
+         Image = 4483362458,
+      })
+   end,
+})
+
+-- 3. Chạy nhanh & 4. Đi xuyên tường (Noclip)
+MainTab:CreateSection("Hỗ trợ di chuyển")
+
+MainTab:CreateSlider({
+   Name = "Tốc độ chạy (Speed)",
+   Range = {16, 200},
+   Increment = 1,
+   Suffix = "Sps",
+   CurrentValue = 16,
+   Flag = "SpeedSlider",
+   Callback = function(Value)
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+   end,
+})
+
+local Noclip = false
+MainTab:CreateToggle({
+   Name = "Đi xuyên vật cản (Noclip)",
+   CurrentValue = false,
+   Flag = "NoclipToggle",
+   Callback = function(Value)
+      Noclip = Value
+      game:GetService("RunService").Stepped:Connect(function()
+          if Noclip then
+              for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                  if v:IsA("BasePart") then
+                      v.CanCollide = false
+                  end
+              end
+          end
+      end)
+   end,
+})
+
+Rayfield:LoadConfiguration()
