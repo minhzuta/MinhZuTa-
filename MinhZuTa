@@ -1,182 +1,109 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Demonology Helper Hub | Anime Edition",
-   LoadingTitle = "Đang kết nối hệ thống...",
+   Name = "Demonology AUTO-DETECT | Anime Edition",
+   LoadingTitle = "Đang phân tích dữ liệu game...",
    LoadingSubtitle = "by Gemini AI",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = "DemonologyHub"
-   }
+   ConfigurationSaving = { Enabled = true, FolderName = "AutoGhost" }
 })
 
--- 2. Logo Menu (Ngẫu nhiên Anime)
-local animeLogos = {
-    "rbxassetid://6034287518", -- Jujutsu Kaisen
-    "rbxassetid://6034241032", -- Demon Slayer
-    "rbxassetid://160309100",  -- One Piece
-    "rbxassetid://6749007604"   -- Naruto
-}
-local randomLogo = animeLogos[math.random(1, #animeLogos)]
+-- Tab Tự Động Xác Định
+local AutoTab = Window:CreateTab("Tự Động Xác Định", 4483362458)
 
--- ==========================================
--- TAB 1: THU THẬP & SUY LUẬN (Manual)
--- ==========================================
-local CalcTab = Window:CreateTab("Suy luận (Manual)", 4483362458)
+AutoTab:CreateSection("Hệ Thống Phân Tích Bằng Chứng")
 
-CalcTab:CreateSection("Sổ tay Demonology (Dựa trên ảnh)")
+local EvidenceFound = {} -- Nơi lưu bằng chứng quét được
 
-local ghostList = {
-    "Aswang", "Banshee", "Demon", "Dullahan", "Dybbuk", "Entity", 
-    "Ghoul", "Keres", "Leviathan", "Nightmare", "oni", "Phantom", 
-    "Revenant", "Shadow", "Siren", "Skinwalker", "Specter", "Spirit", 
-    "umbra", "vex", "wendigo", "The wisp", "wraith" -- Giữ nguyên hoa/thường như ảnh
-}
+-- Hàm thông báo khi tìm thấy ma
+local function NotifyGhost(ghostName)
+    Rayfield:Notify({
+       Title = "⚠️ ĐÃ XÁC ĐỊNH THỰC THỂ!",
+       Content = "Dựa trên bằng chứng, con ma này là: " .. ghostName:upper(),
+       Duration = 10,
+       Image = 4483362458,
+    })
+end
 
-local selectedGhost = "Spirit"
-local ghostDropdown = CalcTab:CreateDropdown({
-   Name = "Thực thể nghi ngờ",
-   Options = ghostList,
-   CurrentOption = {selectedGhost},
-   MultipleOptions = false,
-   Flag = "GhostDropdown",
-   Callback = function(Option)
-      selectedGhost = Option[1]
-   end,
-})
-
-CalcTab:CreateButton({
-   Name = "Xác nhận & Ghi chú (EXP)",
+-- 1. CHỨC NĂNG TỰ ĐỘNG QUÉT (AUTO SCAN)
+AutoTab:CreateButton({
+   Name = "Kích hoạt Quét Bằng Chứng Tự Động",
    Callback = function()
        Rayfield:Notify({
-          Title = "Ghi chú thành công!",
-          Content = "Bạn đã đánh dấu thực thể là: " .. selectedGhost .. ". Hãy đối chiếu thêm bằng chứng.",
-          Duration = 4,
-          Image = 4483362458,
+          Title = "Hệ thống Bắt đầu",
+          Content = "Đang quét các folder dữ liệu của Game...",
+          Duration = 3,
        })
+       
+       -- ĐOẠN CODE LOGIC TỰ ĐỘNG (Cần tùy chỉnh theo cấu trúc mỗi game)
+       task.spawn(function()
+           while true do
+               -- Ví dụ: Quét trong Folder 'Evidence' của người chơi hoặc của Map
+               -- Đây là logic giả lập, bạn cần tìm đúng Folder chứa bằng chứng của game đó
+               local ghostType = game.Workspace:FindFirstChild("GhostData") and game.Workspace.GhostData:GetAttribute("GhostType")
+               
+               if ghostType then
+                   NotifyGhost(ghostType)
+                   break -- Dừng quét khi đã tìm thấy
+               end
+               task.wait(5) -- Quét lại sau mỗi 5 giây
+           end
+       end)
    end,
 })
 
--- ==========================================
--- TAB 2: CÔNG CỤ HACK (MẠNH)
--- ==========================================
-local HackTab = Window:CreateTab("Công cụ Hack", 4483362458)
+-- 2. ESP NHÌN XUYÊN TÊN (Dành cho trường hợp game không ẩn dữ liệu)
+local HackTab = Window:CreateTab("Hack & Di Chuyển", 4483362458)
 
--- 4. Nhìn thấy tên sinh vật (ESP - Đoạn code mẫu)
-HackTab:CreateSection("ESP - Nhìn xuyên tường & Thấy tên")
-
-local ESP_Enabled = false
 HackTab:CreateToggle({
-   Name = "Bật/Tắt ESP Thực thể (Xem tên)",
+   Name = "Hiện tên thực thể ngay lập tức",
    CurrentValue = false,
-   Flag = "ESPToggle",
    Callback = function(Value)
-      ESP_Enabled = Value
-      
-      -- Xóa ESP cũ nếu có
-      for _, v in pairs(game.CoreGui:GetChildren()) do
-          if v.Name == "GhostESP_Holder" then
-              v:Destroy()
-          end
-      end
-
-      if ESP_Enabled then
-          local ESPHolder = Instance.new("Folder")
-          ESPHolder.Name = "GhostESP_Holder"
-          ESPHolder.Parent = game.CoreGui
-
-          -- HÀM TẠO ESP (Đây là đoạn code mẫu, có thể không chạy trên mọi game)
-          local function CreateESP(part)
-              if part:IsA("BasePart") or part:IsA("Model") then
-                  local BillboardGui = Instance.new("BillboardGui")
-                  local TextLabel = Instance.new("TextLabel")
-
-                  BillboardGui.Parent = ESPHolder
-                  BillboardGui.AlwaysOnTop = true
-                  BillboardGui.Size = UDim2.new(0, 100, 0, 50)
-                  BillboardGui.StudsOffset = Vector3.new(0, 3, 0) -- Hiển thị phía trên tên ma
-                  BillboardGui.Adornee = part
-
-                  TextLabel.Parent = BillboardGui
-                  TextLabel.BackgroundTransparency = 1
-                  TextLabel.Size = UDim2.new(1, 0, 1, 0)
-                  TextLabel.Text = part.Name -- LẤY TÊN CỦA ĐỐI TƯỢNG TRONG GAME
-                  TextLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- Màu đỏ
-                  TextLabel.TextScaled = true
-                  TextLabel.Font = Enum.Font.SourceSansBold
-              end
-          end
-
-          -- QUÉT TÌM CON MA (Phần này cần chỉnh sửa cho từng game cụ thể)
-          -- Ví dụ: Quét trong Workspace tìm các Model có tên chứa "Ghost" hoặc "Demon"
-          game:GetService("RunService").Heartbeat:Connect(function()
-              if not ESP_Enabled then return end
-              for _, v in pairs(game.Workspace:GetDescendants()) do
-                  -- CHÚ Ý: Cần thay đổi điều kiện "Ghost" hoặc "Demon" tùy theo game
-                  if v:IsA("Model") and (string.match(v.Name, "Ghost") or string.match(v.Name, "Demon")) and not v:FindFirstChild("Humanoid") then 
-                      if ESPHolder and not ESPHolder:FindFirstChild(v.Name .. "_ESP") then
-                          local success, err = pcall(function()
-                              CreateESP(v)
-                              -- Đặt tên cho ESP để không tạo trùng
-                              ESPHolder:FindFirstChild(v.Name .. "_ESP").Name = v.Name .. "_ESP" 
-                          end)
-                      end
-                  end
-              end
-          end)
-      end
+       _G.ShowName = Value
+       while _G.ShowName do
+           for _, v in pairs(game.Workspace:GetDescendants()) do
+               -- Tìm các Object có thuộc tính giống con ma (thường là Model)
+               if v:IsA("Model") and v:FindFirstChild("HumanoidRootPart") and v.Name ~= game.Players.LocalPlayer.Name then
+                   -- Tạo tag tên trên đầu nó
+                   if not v.HumanoidRootPart:FindFirstChild("GhostTag") then
+                       local tag = Instance.new("BillboardGui", v.HumanoidRootPart)
+                       tag.Name = "GhostTag"
+                       tag.Size = UDim2.new(0, 200, 0, 50)
+                       tag.AlwaysOnTop = true
+                       local text = Instance.new("TextLabel", tag)
+                       text.Size = UDim2.new(1, 0, 1, 0)
+                       text.Text = "THỰC THỂ: " .. v.Name
+                       text.TextColor3 = Color3.fromRGB(255, 255, 0)
+                       text.BackgroundTransparency = 1
+                   end
+               end
+           end
+           task.wait(2)
+       end
    end,
 })
 
-HackTab:CreateParagraph({Title = "Lưu ý về ESP", Content = "ESP này là code mẫu. Nó chỉ hoạt động nếu con ma trong game được đặt tên là 'Ghost' hoặc 'Demon' trong hệ thống. Nếu không hiện tên, bạn cần script riêng cho game đó."})
-
--- 3. Chạy nhanh & 4. Đi xuyên tường (Noclip)
-HackTab:CreateSection("Di chuyển")
-
-local CurrentSpeed = 16
+-- 3. CHỨC NĂNG CHẠY NHANH & XUYÊN TƯỜNG
 HackTab:CreateSlider({
-   Name = "Tốc độ chạy (Speed)",
-   Range = {16, 200},
+   Name = "Tốc độ (Speed Hack)",
+   Range = {16, 150},
    Increment = 1,
-   Suffix = "Sps",
-   CurrentValue = CurrentSpeed,
-   Flag = "SpeedSlider",
+   CurrentValue = 16,
    Callback = function(Value)
-      CurrentSpeed = Value
-      local char = game.Players.LocalPlayer.Character
-      if char and char:FindFirstChild("Humanoid") then
-          char.Humanoid.WalkSpeed = Value
-      end
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
    end,
 })
 
-local Noclip = false
 HackTab:CreateToggle({
    Name = "Đi xuyên vật cản (Noclip)",
    CurrentValue = false,
-   Flag = "NoclipToggle",
-   Callback = function(Value)
-      Noclip = Value
-      game:GetService("RunService").Stepped:Connect(function()
-          if Noclip then
-              local char = game.Players.LocalPlayer.Character
-              if char then
-                  for _, v in pairs(char:GetDescendants()) do
-                      if v:IsA("BasePart") then
-                          v.CanCollide = false
-                      end
-                  end
-              end
-          end
-      end)
+   Callback = function(v)
+       _G.Noclip = v
+       game:GetService("RunService").Stepped:Connect(function()
+           if _G.Noclip and game.Players.LocalPlayer.Character then
+               for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                   if part:IsA("BasePart") then part.CanCollide = false end
+               end
+           end
+       end)
    end,
 })
-
--- Tự động cập nhật tốc độ khi nhân vật respawn
-game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
-    repeat task.wait() until char:FindFirstChild("Humanoid")
-    char.Humanoid.WalkSpeed = CurrentSpeed
-end)
-
-Rayfield:LoadConfiguration()
-
