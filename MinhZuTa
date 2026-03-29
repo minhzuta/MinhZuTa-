@@ -1,162 +1,142 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- 1. KHỞI TẠO MENU & LOGO ANIME NGẪU NHIÊN
-local animeLogos = {
-    "rbxassetid://6034287518", -- Jujutsu Kaisen
-    "rbxassetid://6034241032", -- Demon Slayer
-    "rbxassetid://160309100",  -- One Piece
-    "rbxassetid://6749007604"  -- Naruto
-}
-
 local Window = Rayfield:CreateWindow({
-   Name = "Demonology Pro UI | v2.0 Final",
-   LoadingTitle = "Đang đồng bộ dữ liệu thực thể...",
+   Name = "DEMONOLOGY BYPASS | v3.0",
+   LoadingTitle = "Đang bẻ khóa dữ liệu Game...",
    LoadingSubtitle = "by Gemini AI",
-   ConfigurationSaving = { Enabled = true, FolderName = "GhostFinal" }
+   ConfigurationSaving = { Enabled = false }
 })
 
--- DANH SÁCH 23 LOẠI MA TỪ ẢNH
-local GhostDB = {
-    "Aswang", "Banshee", "Demon", "Dullahan", "Dybbuk", "Entity", "Ghoul", 
-    "Keres", "Leviathan", "Nightmare", "oni", "Phantom", "Revenant", 
-    "Shadow", "Siren", "Skinwalker", "Specter", "Spirit", "umbra", 
-    "vex", "wendigo", "The wisp", "wraith"
-}
+-- DANH SÁCH ĐỐI CHIẾU (Dựa trên ảnh của bạn)
+local GhostDB = {"Aswang", "Banshee", "Demon", "Dullahan", "Dybbuk", "Entity", "Ghoul", "Keres", "Leviathan", "Nightmare", "Oni", "Phantom", "Revenant", "Shadow", "Siren", "Skinwalker", "Specter", "Spirit", "Umbra", "Vex", "Wendigo", "The Wisp", "Wraith"}
 
 -- ==========================================
--- TAB 1: BẢNG CHỈ SỐ (EVIDENCE UI)
+-- TAB 1: TỰ ĐỘNG NHẬN DIỆN (SỬA LỖI EXP)
 -- ==========================================
-local InfoTab = Window:CreateTab("Bằng chứng & Chỉ số", 4483362458)
-InfoTab:CreateSection("--- THÔNG TIN THỰC THỂ ---")
-local GhostName = InfoTab:CreateLabel("Ghost: Đang quét...")
-local Handprints = InfoTab:CreateLabel("Handprints: No")
-local SpiritBox = InfoTab:CreateLabel("Spirit Box: No")
-local Temperature = InfoTab:CreateLabel("Temperature: 0°C")
-local GhostDetail = InfoTab:CreateLabel("Age: ?? | Gender: ?? | Room: ??")
+local AutoTab = Window:CreateTab("Xác định Ma", 4483362458)
+local GhostLabel = AutoTab:CreateLabel("Trạng thái: Đang tìm thực thể...")
 
--- Logic cập nhật chỉ số tự động
-task.spawn(function()
-    while true do
-        local ghost = game.Workspace:FindFirstChild("Ghost") or game.Workspace:FindFirstChild("GhostData")
-        if ghost then
-            local name = ghost:GetAttribute("GhostType") or ghost.Name
-            GhostName:Set("Ghost: " .. tostring(name):upper())
-            Handprints:Set("Handprints: " .. (ghost:GetAttribute("Handprints") and "Yes" or "No"))
-            Temperature:Set("Temperature: " .. (ghost:GetAttribute("Temp") or "0") .. "°C")
-            GhostDetail:Set("Age: " .. (ghost:GetAttribute("Age") or "??") .. " | Room: " .. (ghost:GetAttribute("Room") or "???"))
+-- Hàm quét tìm con ma (Quét mọi ngóc ngách)
+local function GetGhost()
+    for _, v in pairs(game.Workspace:GetDescendants()) do
+        -- Tìm Model không phải người chơi nhưng có tên trong danh sách hoặc chứa chữ Ghost
+        if v:IsA("Model") and v.Name ~= game.Players.LocalPlayer.Name then
+            for _, name in pairs(GhostDB) do
+                if string.find(v.Name:lower(), name:lower()) or v:GetAttribute("GhostType") then
+                    return v, name
+                end
+            end
         end
-        task.wait(2)
     end
-end)
-
--- ==========================================
--- TAB 2: ESP (VẬT PHẨM & MA)
--- ==========================================
-local ESPTab = Window:CreateTab("ESP & Tầm nhìn", 4483362458)
-
-local function ApplyESP(obj, text, color)
-    if not obj:FindFirstChild("ProESP") then
-        local gui = Instance.new("BillboardGui", obj)
-        gui.Name = "ProESP"; gui.AlwaysOnTop = true; gui.Size = UDim2.new(0,100,0,50); gui.StudsOffset = Vector3.new(0,2,0)
-        local lbl = Instance.new("TextLabel", gui)
-        lbl.BackgroundTransparency = 1; lbl.Size = UDim2.new(1,0,1,0); lbl.Text = text; lbl.TextColor3 = color; lbl.TextScaled = true
-    end
+    return nil
 end
 
-ESPTab:CreateToggle({
-   Name = "ESP Vật Phẩm (EMF, Sổ, Đèn...)",
-   CurrentValue = false,
-   Callback = function(v)
-       _G.Items = v
-       while _G.Items do
-           local itemList = {"EMF", "Writing", "Box", "Thermometer", "Camera", "Fuse", "Breaker"}
-           for _, item in pairs(game.Workspace:GetDescendants()) do
-               for _, n in pairs(itemList) do
-                   if item:IsA("Model") and string.find(item.Name:lower(), n:lower()) then
-                       ApplyESP(item, n, Color3.fromRGB(0, 255, 255))
-                   end
-               end
-           end
-           task.wait(5)
-       end
-   end,
-})
-
-ESPTab:CreateToggle({
-   Name = "ESP Thực Thể (Ghost)",
-   CurrentValue = false,
-   Callback = function(v)
-       _G.GhostESP = v
-       while _G.GhostESP do
-           for _, g in pairs(game.Workspace:GetDescendants()) do
-               if g:IsA("Model") and (string.find(g.Name:lower(), "ghost") or g:FindFirstChild("Humanoid")) and g.Name ~= game.Players.LocalPlayer.Name then
-                   ApplyESP(g, "⚠️ GHOST", Color3.fromRGB(255, 0, 0))
-               end
-           end
-           task.wait(2)
+AutoTab:CreateButton({
+   Name = "Quét & Hiện tên ngay lập tức",
+   Callback = function()
+       local ghost, name = GetGhost()
+       if ghost then
+           GhostLabel:Set("ĐÃ TÌM THẤY: " .. name:upper())
+           Rayfield:Notify({Title = "Kết quả", Content = "Thực thể là: " .. name, Duration = 5})
+       else
+           Rayfield:Notify({Title = "Lỗi", Content = "Không tìm thấy dữ liệu ma!", Duration = 3})
        end
    end,
 })
 
 -- ==========================================
--- TAB 3: SIÊU CẤP (TELEPORT & AUTO-PLACE)
+-- TAB 2: SIÊU CẤP (SỬA LỖI TP & THẢ ĐỒ)
 -- ==========================================
 local ProTab = Window:CreateTab("Siêu cấp", 4483362458)
 
 ProTab:CreateButton({
-   Name = "Dịch chuyển đến Ma (Teleport)",
-   Callback = function()
-       local lp = game.Players.LocalPlayer.Character
-       for _, v in pairs(game.Workspace:GetDescendants()) do
-           if v:IsA("Model") and (string.find(v.Name:lower(), "ghost") or v:FindFirstChild("Humanoid")) and v.Name ~= game.Players.LocalPlayer.Name then
-               lp.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
-               break
-           end
-       end
-   end,
-})
-
-ProTab:CreateButton({
-   Name = "Tự động thả đồ quanh Ma (Auto-Place)",
+   Name = "Dịch chuyển & Thả toàn bộ đồ (TP & Drop)",
    Callback = function()
        local lp = game.Players.LocalPlayer
-       local ghostPos = nil
-       for _, v in pairs(game.Workspace:GetDescendants()) do
-           if v:IsA("Model") and (string.find(v.Name:lower(), "ghost") or v:FindFirstChild("Humanoid")) and v.Name ~= lp.Name then
-               ghostPos = v.HumanoidRootPart.CFrame
-               break
-           end
-       end
-       if ghostPos then
-           for _, item in pairs(lp.Backpack:GetChildren()) do
-               item.Parent = lp.Character
-               task.wait(0.1)
-               item.Handle.CFrame = ghostPos + Vector3.new(math.random(-3,3), 0, math.random(-3,3))
+       local char = lp.Character
+       local ghost, _ = GetGhost()
+       
+       if ghost and char then
+           local targetPos = ghost:FindFirstChild("HumanoidRootPart") or ghost:FindFirstChildWhichIsA("BasePart")
+           if targetPos then
+               -- 1. Dịch chuyển
+               char.HumanoidRootPart.CFrame = targetPos.CFrame + Vector3.new(0, 2, 0)
+               task.wait(0.3)
+               
+               -- 2. Thả đồ (Lấy từ Backpack ra tay rồi thả)
+               for _, item in pairs(lp.Backpack:GetChildren()) do
+                   char.Humanoid:EquipTool(item) -- Cầm lên tay
+                   task.wait(0.1)
+                   item.Parent = game.Workspace -- Thả ra môi trường
+                   if item:FindFirstChild("Handle") then
+                       item.Handle.CFrame = targetPos.CFrame + Vector3.new(math.random(-2,2), 0, math.random(-2,2))
+                   end
+               end
+               Rayfield:Notify({Title = "Xong", Content = "Đã TP và thả đồ!", Duration = 3})
            end
        end
    end,
 })
 
 -- ==========================================
--- TAB 4: DI CHUYỂN & HACK
+-- TAB 3: ESP VẬT PHẨM (SỬA LỖI KHÔNG XÁC ĐỊNH ĐƯỢC)
+-- ==========================================
+local ESPTab = Window:CreateTab("ESP", 4483362458)
+
+_G.ESP_Items = false
+ESPTab:CreateToggle({
+   Name = "Bật/Tắt ESP Vật Phẩm",
+   CurrentValue = false,
+   Callback = function(v)
+       _G.ESP_Items = v
+       if not v then
+           -- Xóa ESP khi tắt (Sửa lỗi không tắt được)
+           for _, item in pairs(game.Workspace:GetDescendants()) do
+               if item:FindFirstChild("ItemTag") then item.ItemTag:Destroy() end
+           end
+       end
+       
+       task.spawn(function()
+           while _G.ESP_Items do
+               for _, item in pairs(game.Workspace:GetDescendants()) do
+                   -- Quét các vật phẩm có khả năng tương tác (ClickDetector hoặc ProximityPrompt)
+                   if (item:IsA("ClickDetector") or item:IsA("ProximityPrompt")) and item.Parent:IsA("BasePart") then
+                       local parent = item.Parent
+                       if not parent:FindFirstChild("ItemTag") then
+                           local b = Instance.new("BillboardGui", parent)
+                           b.Name = "ItemTag"; b.AlwaysOnTop = true; b.Size = UDim2.new(0,80,0,40)
+                           local t = Instance.new("TextLabel", b)
+                           t.Size = UDim2.new(1,0,1,0); t.BackgroundTransparency = 1; t.Text = parent.Name; t.TextColor3 = Color3.fromRGB(0, 255, 0); t.TextScaled = true
+                       end
+                   end
+               end
+               task.wait(3)
+           end
+       end)
+   end,
+})
+
+-- ==========================================
+-- TAB 4: DI CHUYỂN
 -- ==========================================
 local MoveTab = Window:CreateTab("Di chuyển", 4483362458)
 
 MoveTab:CreateSlider({
-   Name = "Tốc độ (Speed)",
+   Name = "Tốc độ",
    Range = {16, 200},
    Increment = 1,
    CurrentValue = 16,
    Callback = function(v) game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v end,
 })
 
+_G.Noclip = false
 MoveTab:CreateToggle({
-   Name = "Đi xuyên vật cản (Noclip)",
+   Name = "Noclip (Xuyên tường)",
    CurrentValue = false,
    Callback = function(v)
        _G.Noclip = v
        game:GetService("RunService").Stepped:Connect(function()
-           if _G.Noclip then
+           if _G.Noclip and game.Players.LocalPlayer.Character then
                for _, p in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
                    if p:IsA("BasePart") then p.CanCollide = false end
                end
