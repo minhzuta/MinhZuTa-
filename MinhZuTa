@@ -1,75 +1,68 @@
--- [[ GHOST DETECTION & EXP DISPLAY SYSTEM ]] --
--- Danh sách thực thể: Aswang, Banshee, Demon, Dullahan, Dybbuk, Entity, Ghoul, 
--- Keres, Leviathan, Nightmare, Oni, Phantom, Revenant, Shadow, Siren, 
--- Skinwalker, Specter, Spirit, Umbra, Vex, Wendigo, The Wisp, Wraith.
+-- [[ GHOST ESP CHUYÊN DỤNG CHO EXECUTOR ]] --
+-- Danh sách 23 loại ma từ hình ảnh của bạn
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
--- --- CẤU HÌNH (Tùy chỉnh theo Game của bạn) ---
-local Settings = {
-    ExpPath = "EXP", -- Tên Object chứa EXP (VD: "Level", "Experience")
-    TextSize = 14,
-    TextColor = Color3.fromRGB(255, 0, 0), -- Màu đỏ (Ghost Style)
-    UpdateRate = 0.1 -- Tốc độ làm mới (giây)
+local GhostNames = {
+    "aswang", "banshee", "demon", "dullahan", "dybbuk", "entity", 
+    "ghoul", "keres", "leviathan", "nightmare", "oni", "phantom", 
+    "revenant", "shadow", "siren", "skinwalker", "specter", "spirit", 
+    "umbra", "vex", "wendigo", "the wisp", "wraith"
 }
 
--- Danh sách tên quái từ ảnh (viết thường để so sánh chính xác)
-local GhostList = {
-    ["aswang"] = true, ["banshee"] = true, ["demon"] = true, ["dullahan"] = true,
-    ["dybbuk"] = true, ["entity"] = true, ["ghoul"] = true, ["keres"] = true,
-    ["leviathan"] = true, ["nightmare"] = true, ["oni"] = true, ["phantom"] = true,
-    ["revenant"] = true, ["shadow"] = true, ["siren"] = true, ["skinwalker"] = true,
-    ["specter"] = true, ["spirit"] = true, ["umbra"] = true, ["vex"] = true,
-    ["wendigo"] = true, ["the wisp"] = true, ["wraith"] = true
-}
+-- Hàm tạo bảng tên và EXP
+local function CreateESP(model)
+    if model:FindFirstChild("ESP_GHOST") then return end
+    
+    local part = model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("Head")
+    if not part then return end
 
--- Hàm tạo giao diện hiển thị
-local function ApplyESP(model)
-    if model:FindFirstChild("GhostESP_UI") then return end
+    local bgui = Instance.new("BillboardGui", model)
+    bgui.Name = "ESP_GHOST"
+    bgui.AlwaysOnTop = true
+    bgui.Size = UDim2.new(0, 200, 0, 50)
+    bgui.StudsOffset = Vector3.new(0, 3, 0)
 
-    local head = model:FindFirstChild("Head") or model:FindFirstChild("HumanoidRootPart")
-    if not head then return end
+    local tl = Instance.new("TextLabel", bgui)
+    tl.BackgroundTransparency = 1
+    tl.Size = UDim2.new(1, 0, 1, 0)
+    tl.Font = Enum.Font.Code
+    tl.TextStrokeTransparency = 0
+    tl.TextColor3 = Color3.fromRGB(255, 255, 255) -- Chữ trắng
+    tl.TextScaled = true
 
-    local bill = Instance.new("BillboardGui")
-    bill.Name = "GhostESP_UI"
-    bill.Adornee = head
-    bill.Size = UDim2.new(0, 200, 0, 50)
-    bill.StudsOffset = Vector3.new(0, 3, 0)
-    bill.AlwaysOnTop = true
-    bill.Parent = model
-
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Settings.TextColor
-    label.TextStrokeTransparency = 0.5
-    label.TextScaled = false
-    label.TextSize = Settings.TextSize
-    label.Font = Enum.Font.SpecialElite -- Kiểu chữ kinh dị
-    label.Parent = bill
-
-    -- Vòng lặp cập nhật thông số
-    task.spawn(function()
-        while model.Parent and bill.Parent do
-            local expValue = model:FindFirstChild(Settings.ExpPath)
-            local expText = expValue and tostring(expValue.Value) or "0"
+    -- Vòng lặp cập nhật EXP và Tên
+    spawn(function()
+        while model.Parent and bgui.Parent do
+            -- Tự động tìm giá trị EXP (Thường nằm trong Model hoặc Humanoid)
+            local expValue = model:FindFirstChild("EXP") or model:FindFirstChild("Experience") or model:FindFirstChild("Level")
+            local currentExp = expValue and tostring(expValue.Value) or "N/A"
             
-            label.Text = string.format("[%s]\nEXP: %s", model.Name:upper(), expText)
-            task.wait(Settings.UpdateRate)
+            tl.Text = model.Name .. "\n[EXP: " .. currentExp .. "]"
+            wait(1)
         end
     end)
 end
 
--- Hàm kiểm tra và kích hoạt
-local function CheckAndTag(obj)
-    if obj:IsA("Model") and GhostList[obj.Name:lower()] then
-        ApplyESP(obj)
+-- Hàm kiểm tra xem Model có phải là quái trong danh sách không
+local function CheckGhost(obj)
+    if obj:IsA("Model") then
+        for _, name in pairs(GhostNames) do
+            if string.find(string.lower(obj.Name), name) then
+                CreateESP(obj)
+                break
+            end
+        end
     end
 end
 
--- Quét toàn bộ quái đang có và quái mới sinh ra
-for _, v in pairs(workspace:GetChildren()) do CheckAndTag(v) end
-workspace.ChildAdded:Connect(CheckAndTag)
+-- Thực thi quét toàn bản đồ
+for _, v in pairs(workspace:GetDescendants()) do
+    CheckGhost(v)
+end
 
-print(">>> Ghost ESP Loaded! Đang theo dõi 23 thực thể...")
+-- Tự động hiện khi quái mới xuất hiện
+workspace.DescendantAdded:Connect(function(v)
+    wait(0.5)
+    CheckGhost(v)
+end)
+
+print(">>> Đã kích hoạt ESP cho 23 loại Ma!")
