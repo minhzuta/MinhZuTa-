@@ -1,47 +1,65 @@
--- [[ CẤU HÌNH ]]
-local PHIM_TAT = Enum.KeyCode.K -- Bạn có thể đổi 'K' thành phím khác nếu muốn
-
--- [[ 1. TÍNH NĂNG CHỐNG AFK (ANTI-DISCONNECT) ]]
--- Tự động chạy ngầm ngay khi dán script
+-- [[ 1. CHỐNG AFK (ANTI-DISCONNECT) ]]
 local VU = game:GetService("VirtualUser")
-if _G.AntiAFKLoaded then
-    print("Anti-AFK đã hoạt động từ trước.")
-else
+if not _G.AntiAFKLoaded then
     _G.AntiAFKLoaded = true
     game:GetService("Players").LocalPlayer.Idled:Connect(function()
         VU:CaptureController()
         VU:ClickButton2(Vector2.new())
     end)
-    print("Kích hoạt Anti-AFK thành công!")
 end
 
--- [[ 2. TẠO GIAO DIỆN MÀN HÌNH ĐEN ]]
+-- [[ 2. TẠO GIAO DIỆN ]]
 local CoreGui = game:GetService("CoreGui")
 local ScreenGui = Instance.new("ScreenGui")
-local Frame = Instance.new("Frame")
-local StatusLabel = Instance.new("TextLabel")
-
-ScreenGui.Name = "BlackScreen_System"
+ScreenGui.Name = "AFK_Mobile_System"
 ScreenGui.Parent = CoreGui
-ScreenGui.IgnoreGuiInset = true -- Che cả thanh Taskbar của Roblox
+ScreenGui.IgnoreGuiInset = true
 
-Frame.Parent = ScreenGui
-Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Màu đen
-Frame.Size = UDim2.new(1, 0, 1, 0)
-Frame.Active = true
+-- Khung nền đen
+local BlackFrame = Instance.new("Frame")
+BlackFrame.Parent = ScreenGui
+BlackFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+BlackFrame.Size = UDim2.new(1, 0, 1, 0)
+BlackFrame.Visible = true -- Mặc định bật khi chạy
+BlackFrame.ZIndex = 10
 
-StatusLabel.Parent = Frame
-StatusLabel.BackgroundTransparency = 1
-StatusLabel.Position = UDim2.new(0.5, -200, 0.5, -50)
-StatusLabel.Size = UDim2.new(0, 400, 0, 100)
-StatusLabel.Font = Enum.Font.Code
-StatusLabel.Text = "STATUS: AFK MODE ACTIVE\n\n[Press '"..PHIM_TAT.Name.."' to Toggle]"
-StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 0) -- Chữ màu xanh neon cho chuyên nghiệp
-StatusLabel.TextSize = 22
+-- Chữ thông báo
+local InfoLabel = Instance.new("TextLabel")
+InfoLabel.Parent = BlackFrame
+InfoLabel.BackgroundTransparency = 1
+InfoLabel.Size = UDim2.new(1, 0, 1, 0)
+InfoLabel.Text = "ĐANG TREO MÁY...\n(Bấm nút tròn để tắt/mở)"
+InfoLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+InfoLabel.TextSize = 20
+InfoLabel.Font = Enum.Font.SourceSansBold
 
--- [[ 3. HÀM BẬT/TẮT BẰNG PHÍM ]]
-game:GetService("UserInputService").InputBegan:Connect(function(input, processed)
-    if not processed and input.KeyCode == PHIM_TAT then
-        ScreenGui.Enabled = not ScreenGui.Enabled
+-- Nút bấm Bật/Tắt (Nút này sẽ luôn nằm trên cùng)
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Parent = ScreenGui
+ToggleBtn.Name = "ToggleAFK"
+ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleBtn.Position = UDim2.new(0, 10, 0.5, -25) -- Nằm ở giữa cạnh trái màn hình
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Màu đỏ cho dễ thấy
+ToggleBtn.Text = "ON"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Font = Enum.Font.SourceSansBold
+ToggleBtn.TextSize = 18
+ToggleBtn.ZIndex = 20 -- Luôn nằm trên lớp màu đen
+
+-- Bo tròn nút cho đẹp
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(1, 0)
+UICorner.Parent = ToggleBtn
+
+-- [[ 3. XỬ LÝ BẤM NÚT ]]
+ToggleBtn.MouseButton1Click:Connect(function()
+    if BlackFrame.Visible then
+        BlackFrame.Visible = false
+        ToggleBtn.Text = "OFF"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Đổi sang xanh khi tắt
+    else
+        BlackFrame.Visible = true
+        ToggleBtn.Text = "ON"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Đổi sang đỏ khi bật
     end
 end)
