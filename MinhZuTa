@@ -1,65 +1,82 @@
--- [[ 1. CHỐNG AFK (ANTI-DISCONNECT) ]]
-local VU = game:GetService("VirtualUser")
-if not _G.AntiAFKLoaded then
-    _G.AntiAFKLoaded = true
-    game:GetService("Players").LocalPlayer.Idled:Connect(function()
-        VU:CaptureController()
-        VU:ClickButton2(Vector2.new())
-    end)
-end
-
--- [[ 2. TẠO GIAO DIỆN ]]
-local CoreGui = game:GetService("CoreGui")
+-- Tạo ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "AFK_Mobile_System"
-ScreenGui.Parent = CoreGui
-ScreenGui.IgnoreGuiInset = true
-
--- Khung nền đen
-local BlackFrame = Instance.new("Frame")
-BlackFrame.Parent = ScreenGui
-BlackFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-BlackFrame.Size = UDim2.new(1, 0, 1, 0)
-BlackFrame.Visible = true -- Mặc định bật khi chạy
-BlackFrame.ZIndex = 10
-
--- Chữ thông báo
-local InfoLabel = Instance.new("TextLabel")
-InfoLabel.Parent = BlackFrame
-InfoLabel.BackgroundTransparency = 1
-InfoLabel.Size = UDim2.new(1, 0, 1, 0)
-InfoLabel.Text = "ĐANG TREO MÁY...\n(Bấm nút tròn để tắt/mở)"
-InfoLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-InfoLabel.TextSize = 20
-InfoLabel.Font = Enum.Font.SourceSansBold
-
--- Nút bấm Bật/Tắt (Nút này sẽ luôn nằm trên cùng)
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Parent = ScreenGui
-ToggleBtn.Name = "ToggleAFK"
-ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
-ToggleBtn.Position = UDim2.new(0, 10, 0.5, -25) -- Nằm ở giữa cạnh trái màn hình
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Màu đỏ cho dễ thấy
-ToggleBtn.Text = "ON"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.Font = Enum.Font.SourceSansBold
-ToggleBtn.TextSize = 18
-ToggleBtn.ZIndex = 20 -- Luôn nằm trên lớp màu đen
-
--- Bo tròn nút cho đẹp
+local MainFrame = Instance.new("Frame")
+local ToggleButton = Instance.new("TextButton")
 local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(1, 0)
-UICorner.Parent = ToggleBtn
 
--- [[ 3. XỬ LÝ BẤM NÚT ]]
-ToggleBtn.MouseButton1Click:Connect(function()
-    if BlackFrame.Visible then
-        BlackFrame.Visible = false
-        ToggleBtn.Text = "OFF"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Đổi sang xanh khi tắt
+-- Cấu hình GUI
+ScreenGui.Name = "AntiAFK_BlackScreen"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Nút bấm tròn (Menu)
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = ScreenGui
+ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 255, 127)
+ToggleButton.Position = UDim2.new(0.05, 0, 0.15, 0)
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Text = "ON"
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 18
+
+UICorner.CornerRadius = UDim.new(1, 0)
+UICorner.Parent = ToggleButton
+
+-- Màn hình đen che máy
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+MainFrame.BackgroundTransparency = 0
+MainFrame.Position = UDim2.new(0, 0, 0, 0)
+MainFrame.Size = UDim2.new(1, 0, 1, 0)
+MainFrame.Visible = true
+MainFrame.ZIndex = 0 -- Để nút bấm luôn nằm trên
+
+-- Chức năng bật/tắt
+local isActive = true
+ToggleButton.MouseButton1Click:Connect(function()
+    isActive = not isActive
+    MainFrame.Visible = isActive
+    if isActive then
+        ToggleButton.Text = "ON"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 255, 127)
     else
-        BlackFrame.Visible = true
-        ToggleBtn.Text = "ON"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Đổi sang đỏ khi bật
+        ToggleButton.Text = "OFF"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 85, 85)
     end
 end)
+
+-- Chống AFK (Ngăn bị kick sau 20 phút)
+local VirtualUser = game:GetService("VirtualUser")
+game:GetService("Players").LocalPlayer.Idled:Connect(function()
+    if isActive then
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end
+end)
+
+-- Cho phép di chuyển nút bấm trên điện thoại
+local dragging, dragInput, dragStart, startPos
+ToggleButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = ToggleButton.Position
+    end
+end)
+
+ToggleButton.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+        local delta = input.Position - dragStart
+        ToggleButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+ToggleButton.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+print("Script Anti-AFK Black Screen đã chạy!")
