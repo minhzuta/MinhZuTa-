@@ -1,65 +1,71 @@
--- Tạo ScreenGui
+-- Script Treo Máy Màn Hình Đen Tuyệt Đối
 local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
+local BlackFrame = Instance.new("Frame")
 local ToggleButton = Instance.new("TextButton")
 local UICorner = Instance.new("UICorner")
 
--- Cấu hình GUI
-ScreenGui.Name = "AntiAFK_BlackScreen"
-ScreenGui.Parent = game.CoreGui
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+-- Thiết lập ScreenGui (Ưu tiên hiển thị cao nhất)
+ScreenGui.Name = "Ultra_BlackScreen"
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.DisplayOrder = 999999 -- Đảm bảo đè lên mọi UI khác của Game
+ScreenGui.IgnoreGuiInset = true -- Che cả thanh trạng thái phía trên điện thoại
 
--- Nút bấm tròn (Menu)
+-- Màn hình đen hoàn toàn
+BlackFrame.Name = "BlackFrame"
+BlackFrame.Parent = ScreenGui
+BlackFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+BlackFrame.BorderSizePixel = 0
+BlackFrame.Size = UDim2.new(1, 0, 1, 0) -- Phủ kín toàn bộ màn hình
+BlackFrame.Visible = true
+BlackFrame.ZIndex = 1
+
+-- Nút bấm Menu hình tròn
 ToggleButton.Name = "ToggleButton"
 ToggleButton.Parent = ScreenGui
 ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 255, 127)
-ToggleButton.Position = UDim2.new(0.05, 0, 0.15, 0)
-ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Position = UDim2.new(0.1, 0, 0.1, 0)
+ToggleButton.Size = UDim2.new(0, 45, 0, 45)
 ToggleButton.Text = "ON"
-ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Font = Enum.Font.GothamBold
 ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleButton.TextSize = 18
+ToggleButton.TextSize = 14
+ToggleButton.ZIndex = 2 -- Nằm trên màn hình đen
+ToggleButton.BackgroundTransparency = 0.3 -- Hơi mờ để bảo vệ màn hình
 
 UICorner.CornerRadius = UDim.new(1, 0)
 UICorner.Parent = ToggleButton
 
--- Màn hình đen che máy
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-MainFrame.BackgroundTransparency = 0
-MainFrame.Position = UDim2.new(0, 0, 0, 0)
-MainFrame.Size = UDim2.new(1, 0, 1, 0)
-MainFrame.Visible = true
-MainFrame.ZIndex = 0 -- Để nút bấm luôn nằm trên
-
--- Chức năng bật/tắt
-local isActive = true
+-- Logic Bật/Tắt
+local isBlack = true
 ToggleButton.MouseButton1Click:Connect(function()
-    isActive = not isActive
-    MainFrame.Visible = isActive
-    if isActive then
+    isBlack = not isBlack
+    BlackFrame.Visible = isBlack
+    
+    if isBlack then
         ToggleButton.Text = "ON"
         ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 255, 127)
+        ToggleButton.BackgroundTransparency = 0.5 -- Mờ hơn khi đang treo
     else
         ToggleButton.Text = "OFF"
         ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 85, 85)
+        ToggleButton.BackgroundTransparency = 0 -- Hiện rõ khi đang chỉnh
     end
 end)
 
--- Chống AFK (Ngăn bị kick sau 20 phút)
-local VirtualUser = game:GetService("VirtualUser")
+-- Chống AFK (Mã tối ưu cho Mobile)
+local vu = game:GetService("VirtualUser")
 game:GetService("Players").LocalPlayer.Idled:Connect(function()
-    if isActive then
-        VirtualUser:CaptureController()
-        VirtualUser:ClickButton2(Vector2.new())
+    if isBlack then
+        vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        wait(1)
+        vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
     end
 end)
 
--- Cho phép di chuyển nút bấm trên điện thoại
+-- Kéo thả nút bấm (Dành cho cảm ứng điện thoại)
 local dragging, dragInput, dragStart, startPos
 ToggleButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = ToggleButton.Position
@@ -67,16 +73,16 @@ ToggleButton.InputBegan:Connect(function(input)
 end)
 
 ToggleButton.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+    if dragging and input.UserInputType == Enum.UserInputType.Touch then
         local delta = input.Position - dragStart
         ToggleButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
 
 ToggleButton.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.Touch then
         dragging = false
     end
 end)
 
-print("Script Anti-AFK Black Screen đã chạy!")
+print("Đã kích hoạt màn hình đen tuyệt đối và Chống AFK!")
