@@ -1,163 +1,33 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- Tạo ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local TextLabel = Instance.new("TextLabel")
 
-local Window = Rayfield:CreateWindow({
-   Name = "DEMONOLOGY GOD MODE | v5.0",
-   LoadingTitle = "Đang thâm nhập dữ liệu Map...",
-   LoadingSubtitle = "by Gemini AI",
-   ConfigurationSaving = { Enabled = false }
-})
+-- Cấu hình ScreenGui
+ScreenGui.Parent = game.CoreGui
+ScreenGui.IgnoreGuiInset = true -- Che phủ toàn bộ màn hình kể cả thanh công cụ
 
-local GhostDB = {"Aswang", "Banshee", "Demon", "Dullahan", "Dybbuk", "Entity", "Ghoul", "Keres", "Leviathan", "Nightmare", "Oni", "Phantom", "Revenant", "Shadow", "Siren", "Skinwalker", "Specter", "Spirit", "Umbra", "Vex", "Wendigo", "The Wisp", "Wraith"}
+-- Cấu hình Frame đen
+Frame.Parent = ScreenGui
+Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame.Size = UDim2.new(1, 0, 1, 0)
+Frame.Active = true -- Ngăn chặn click chuột xuyên qua game
 
--- Hàm tìm Ma tối ưu
-local function FindTrueGhost()
-    for _, v in pairs(game.Workspace:GetDescendants()) do
-        if v:IsA("Model") and v:FindFirstChildOfClass("Humanoid") and not game.Players:GetPlayerFromCharacter(v) then
-            return v
-        end
-    end
-    for _, v in pairs(game:GetDescendants()) do
-        if v:IsA("Model") and table.find(GhostDB, v.Name) then
-            return v
-        end
-    end
-    return nil
-end
+-- Cấu hình dòng chữ thông báo
+TextLabel.Parent = Frame
+TextLabel.BackgroundTransparency = 1
+TextLabel.Position = UDim2.new(0.5, -150, 0.5, -25)
+TextLabel.Size = UDim2.new(0, 300, 0, 50)
+TextLabel.Font = Enum.Font.SourceSansBold
+TextLabel.Text = "SYSTEM AFK MODE: ACTIVE"
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.TextSize = 25
+TextLabel.TextWrapped = true
 
--- ==========================================
--- TAB 1: XÁC ĐỊNH SINH VẬT
--- ==========================================
-local InfoTab = Window:CreateTab("Xác định Ma", "info")
-local GhostLabel = InfoTab:CreateLabel("Ghost: Đang chờ quét...")
-local EvidenceLabel = InfoTab:CreateLabel("Thông số: Chưa tìm thấy")
-
-InfoTab:CreateButton({
-   Name = "QUÉT & XÁC ĐỊNH GHOST",
-   Callback = function()
-       local ghost = FindTrueGhost()
-       if ghost then
-           local name = ghost:GetAttribute("GhostType") or ghost.Name
-           local temp = ghost:GetAttribute("Temperature") or ghost:GetAttribute("Temp") or "N/A"
-           local prints = ghost:GetAttribute("Fingerprints") or "N/A"
-           
-           GhostLabel:Set("GHOST: " .. tostring(name):upper())
-           EvidenceLabel:Set("Nhiệt độ: " .. temp .. " | Vân tay: " .. prints)
-           
-           Rayfield:Notify({Title = "Thành công", Content = "Đã tìm thấy: " .. name, Duration = 5})
-       else
-           Rayfield:Notify({Title = "Lỗi", Content = "Không tìm thấy Ghost!", Duration = 3})
-       end
-   end,
-})
-
--- ==========================================
--- TAB 2: ĐỊNH VỊ (ESP)
--- ==========================================
-local ESPTab = Window:CreateTab("Định vị", "eye")
-_G.ESP = false
-
-ESPTab:CreateToggle({
-   Name = "Bật/Tắt ESP (Ma & Vật phẩm)",
-   CurrentValue = false,
-   Callback = function(v)
-       _G.ESP = v
-       if not v then
-           -- Xóa toàn bộ Tag khi tắt
-           for _, obj in pairs(game.Workspace:GetDescendants()) do
-               if obj:FindFirstChild("GhostTag") then obj.GhostTag:Destroy() end
-           end
-       end
-   end,
-})
-
--- Vòng lặp ESP riêng biệt để tránh giật lag
-task.spawn(function()
-    while true do
-        if _G.ESP then
-            -- ESP cho Ma
-            local g = FindTrueGhost()
-            if g then
-                local p = g:FindFirstChild("HumanoidRootPart") or g:FindFirstChildWhichIsA("BasePart")
-                if p and not p:FindFirstChild("GhostTag") then
-                    local b = Instance.new("BillboardGui", p)
-                    b.Name = "GhostTag"; b.AlwaysOnTop = true; b.Size = UDim2.new(0,100,0,40); b.StudsOffset = Vector3.new(0,3,0)
-                    local t = Instance.new("TextLabel", b); t.Size = UDim2.new(1,0,1,0); t.BackgroundTransparency = 1; t.Text = "⚠️ GHOST"; t.TextColor3 = Color3.fromRGB(255,0,0); t.TextScaled = true
-                end
-            end
-            
-            -- ESP cho Vật phẩm
-            for _, item in pairs(game.Workspace:GetDescendants()) do
-                if item:IsA("Tool") or item:FindFirstChildOfClass("ProximityPrompt") then
-                    local handle = item:IsA("BasePart") and item or item:FindFirstChildWhichIsA("BasePart")
-                    if handle and not handle:FindFirstChild("GhostTag") then
-                        local b = Instance.new("BillboardGui", handle)
-                        b.Name = "GhostTag"; b.AlwaysOnTop = true; b.Size = UDim2.new(0,80,0,30); b.StudsOffset = Vector3.new(0,2,0)
-                        local t = Instance.new("TextLabel", b); t.Size = UDim2.new(1,0,1,0); t.BackgroundTransparency = 1; t.Text = item.Name; t.TextColor3 = Color3.fromRGB(255,255,0); t.TextScaled = true
-                    end
-                end
-            end
-        end
-        task.wait(2) -- Quét mỗi 2 giây để tiết kiệm tài nguyên
-    end
-end)
-
--- ==========================================
--- TAB 3: HÀNH ĐỘNG
--- ==========================================
-local ActionTab = Window:CreateTab("Hành động", "zap")
-
-ActionTab:CreateButton({
-   Name = "Dịch chuyển & Xả đồ quanh Ma",
-   Callback = function()
-       local lp = game.Players.LocalPlayer
-       local ghost = FindTrueGhost()
-       
-       if ghost and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-           local ghostPart = ghost:FindFirstChild("HumanoidRootPart") or ghost:FindFirstChildWhichIsA("BasePart")
-           if ghostPart then
-               lp.Character.HumanoidRootPart.CFrame = ghostPart.CFrame * CFrame.new(0, -3, 2)
-               task.wait(0.3)
-
-               for _, tool in pairs(lp.Backpack:GetChildren()) do
-                   if tool:IsA("Tool") then
-                       lp.Character.Humanoid:EquipTool(tool)
-                       task.wait(0.1)
-                       tool.Parent = game.Workspace
-                   end
-               end
-               Rayfield:Notify({Title = "Xong", Content = "Đã dịch chuyển và thả đồ!", Duration = 2})
-           end
-       end
-   end,
-})
-
--- ==========================================
--- TAB 4: DI CHUYỂN
--- ==========================================
-local MoveTab = Window:CreateTab("Di chuyển", "move")
-
-MoveTab:CreateSlider({
-   Name = "Tốc độ chạy", Range = {16, 200}, Increment = 1, CurrentValue = 16,
-   Callback = function(v) 
-       if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
-           game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v 
-       end
-   end,
-})
-
-_G.Noclip = false
-MoveTab:CreateToggle({
-   Name = "Đi xuyên tường (Noclip)", CurrentValue = false,
-   Callback = function(v) _G.Noclip = v end,
-})
-
--- Vòng lặp Noclip tối ưu (Chỉ chạy 1 lần duy nhất)
-game:GetService("RunService").Stepped:Connect(function()
-    if _G.Noclip and game.Players.LocalPlayer.Character then
-        for _, p in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
-            if p:IsA("BasePart") and p.CanCollide then 
-                p.CanCollide = false 
-            end
-        end
+-- Chức năng tắt màn hình đen khi nhấn phím "K" (có thể thay đổi phím tùy chọn)
+local UserInputService = game:GetService("UserInputService")
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode.K then
+        ScreenGui:Destroy()
     end
 end)
